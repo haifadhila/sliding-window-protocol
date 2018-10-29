@@ -1,11 +1,15 @@
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h> 
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 void error(const char *msg)
 {
@@ -13,13 +17,27 @@ void error(const char *msg)
     exit(0);
 }
 
+int readFile(string inputfile, string message){
+    string line;
+    ifstream filename;
+    filename.open("test.txt");
+    if (filename.is_open()){
+        while(getline(filename, line)){
+            message = message + line;
+        }
+    }else{
+        cout << "Can't open file" << endl;
+    }
+}
+
 int main(int argc, char *argv[])
 {
+    string filename = "test.txt";
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-    char buffer[256];
+    char *buffer;
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
@@ -42,12 +60,11 @@ int main(int argc, char *argv[])
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
     printf("Please enter the message: ");
-    bzero(buffer,256);
-    fgets(buffer,255,stdin);
+    std::string buff(buffer);
+    readFile(filename,buff);
     n = write(sockfd,buffer,strlen(buffer));
     if (n < 0) 
          error("ERROR writing to socket");
-    bzero(buffer,256);
     n = read(sockfd,buffer,255);
     if (n < 0) 
          error("ERROR reading from socket");

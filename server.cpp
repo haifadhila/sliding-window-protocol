@@ -2,12 +2,15 @@
    The port number is passed as an argument */
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fstream>
+#include <strings.h>
+#include <iostream>
+using namespace std;
 
 void error(const char *msg)
 {
@@ -15,7 +18,7 @@ void error(const char *msg)
     exit(1);
 }
 
-int writeFile(string message, string outputfile){
+int writeFile(string message, char *outputfile){
     ofstream filename;
     filename.open(outputfile);
     filename << message << "\n";
@@ -68,7 +71,7 @@ int main(int argc, char *argv[])
      n = read(newsockfd,buffer,255);
 
      std::string buff(buffer);
-     writeFile(buff, filename);
+     writeFile(buff, "hello.txt");
 
      if (n < 0) error("ERROR reading from socket");
      printf("Here is the message: %s\n",buffer);
