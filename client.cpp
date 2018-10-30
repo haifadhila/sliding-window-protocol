@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -11,6 +12,7 @@
 #include <fstream>
 using namespace std;
 
+#define BUFFSIZE 1024
 void error(const char *msg)
 {
     perror(msg);
@@ -32,40 +34,61 @@ int readFile(string inputfile, string message){
 
 int main(int argc, char *argv[])
 {
-    string filename = "test.txt";
-    int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-
-    char *buffer;
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
+    if (argc != 6){
+        cout << "wrong input" << endl;
+        cout << "./sendfile filename windowsize buffersize IPaddress port" << endl;
+        exit(0);
+    }else{
+        filename = argv[1]
+        windowsize = atoi(argv[2]);
+        bufferSize = atoi(argv[3]);
+        ipaddr = argv[4]
+        port = atoi(argv[5]);
     }
-    portno = atoi(argv[2]);
+
+
+    int sockfd, n;
+    struct sockaddr_in serv_addr, cli_addr;
+    char* server;
+
+    char buffer[1024];
+    
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         error("ERROR opening socket");
-    server = gethostbyname(argv[1]);
-    if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
-        exit(0);
-    }
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    server = ipaddr;
+    // if (server == NULL) {
+    //     cerr << "ERROR, no such host\n";
+    //     exit(0);
+    // }
+    memset((char *) &cli_addr, 0, sizeof(cli_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(portno);
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
-        error("ERROR connecting");
-    printf("Please enter the message: ");
+    myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    myaddr.sin_port = htons(0);
+    
+    if (bind(fd, (struct sockaddr *)&cli_addr, sizeof(cli_addr)) < 0) {
+        perror("bind failed");
+        return 0;
+    }
+
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(server);
+    if (inet_aton(server, &serv_addr.sin_addr)==0) {
+        fprintf(stderr, "inet_aton() failed\n");
+        exit(1);
+    }
+    
+    for (i=0;i < 5;i++){
+        printf("Sending packet to %s port %d\n",server, port);
+
+    }
     std::string buff(buffer);
-    readFile(filename,buff);
+    readFile(filename,buffer);
     n = write(sockfd,buffer,strlen(buffer));
     if (n < 0) 
          error("ERROR writing to socket");
-    n = read(sockfd,buffer,255);
+    
     if (n < 0) 
          error("ERROR reading from socket");
     printf("%s\n",buffer);

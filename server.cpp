@@ -12,16 +12,19 @@
 #include <iostream>
 using namespace std;
 
+#define BUFFSIZE 1024
 void error(const char *msg)
 {
     perror(msg);
     exit(1);
 }
 
-int writeFile(string message, char *outputfile){
+int writeFile(char* message, char* outputfile){
     ofstream filename;
-    filename.open(outputfile);
-    filename << message << "\n";
+    filename.open(outputfile, ofstream::binary);
+
+    int size = sizeof(message);
+    filename.write(message,size);
     filename.close();
     return 0;
 }
@@ -29,38 +32,42 @@ int writeFile(string message, char *outputfile){
 
 int main(int argc, char *argv[])
 {
-    // if (argc != 6){
-    //     cout << "input the right message." << endl;
-    //     cout << "./sendfile filename windowsize buffersize IP port" << endl;
-    //     exit(0);
-    // } else {
-    //     filename = argv[1];
-    //     windowsize = argv[2];
-    //     bufferSize = argv[3];
-    //     destinationIP = argv[4];
-    //     port = argv[5];
-    // }
+    if (argc != 5){
+        cout << "input the right message." << endl;
+        cout << "./recvfile filename windowsize buffersize port" << endl;
+        exit(0);
+    } else {
+		filename = argv[1];
+        windowsize = atoi(argv[2]);
+        bufferSize = atoi(argv[3]);
+        port = atoi(argv[4]);
+    }
 
-     int sockfd, newsockfd, portno;
+     int sockfd, portno;
+     int windowSize;
      socklen_t clilen;
-     char *buffer;
-     struct sockaddr_in serv_addr, cli_addr;
+     char buffer[1024];
+     struct sockaddr_in server_addr, cli_addr;
      int n;
-     if (argc < 2) {
-         fprintf(stderr,"ERROR, no port provided\n");
-         exit(1);
-     }
+     int recvlen;
+     
+
+     // Create Socket
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0) 
         error("ERROR opening socket");
-     bzero((char *) &serv_addr, sizeof(serv_addr));
-     portno = atoi(argv[1]);
-     serv_addr.sin_family = AF_INET;
-     serv_addr.sin_addr.s_addr = INADDR_ANY;
-     serv_addr.sin_port = htons(portno);
-     if (bind(sockfd, (struct sockaddr *) &serv_addr,
-              sizeof(serv_addr)) < 0) 
-              error("ERROR on binding");
+
+    memset((char*)&server_addr, 0 ,sizeof(server_addr));
+
+    //bind socke
+	 server_addr.sin_family = AF_INET;
+	 server_addr.sin_addr.s_addr = INADDR_ANY;
+	 server_addr.sin_port = htons(port);
+
+     if (bind(sockfd, (struct sockaddr *) &server_addr,
+              sizeof(server_addr)) < 0) 
+              error("Bind error");
+
      listen(sockfd,5);
      clilen = sizeof(cli_addr);
      newsockfd = accept(sockfd, 
@@ -68,15 +75,28 @@ int main(int argc, char *argv[])
                  &clilen);
      if (newsockfd < 0) 
           error("ERROR on accept");
-     n = read(newsockfd,buffer,255);
+     
 
-     std::string buff(buffer);
-     writeFile(buff, "hello.txt");
+     for (;;) {
+		printf("waiting on port %d\n", SERVICE_PORT);
+		recvlen = recvfrom(sockfd, buffer, BUFFSIZE, 0, (struct sockaddr *)&cli_addr, &clilen);
+		if (recvlen > 0) {
+			buffer[recvlen] = 0;
+			printf("received message: \"%s\" (%d bytes)\n", buffer, recvlen);
+			writeFile(buffer,filename);
+		}
+		else
+			printf("uh oh - something went wrong!\n");
+		sprintf(buffer, "ack %d", msgcnt++);
+		printf("sending response \"%s\"\n", buffer);
+		if (sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr, clilen) < 0)
+			perror("sendto");
+	}
+     
 
-     if (n < 0) error("ERROR reading from socket");
+     
      printf("Here is the message: %s\n",buffer);
-     n = write(newsockfd,"I got your message",18);
-     if (n < 0) error("ERROR writing to socket");
+     
      close(newsockfd);
      close(sockfd);
      return 0; 
