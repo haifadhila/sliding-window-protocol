@@ -13,9 +13,8 @@
 #include <fstream>
 using namespace std;
 
-#define MAX_BUFFSIZE 1024
-#define MAX_FRAME 1034
-
+#define BUFFSIZE 1024
+#define ACKSIZE 6
 void error(const char *msg)
 {
     perror(msg);
@@ -69,7 +68,10 @@ int main(int argc, char *argv[])
         error("ERROR opening socket");
 
     int slen = sizeof(serv_addr);
-
+    // if (server == NULL) {
+    //     cerr << "ERROR, no such host\n";
+    //     exit(0);
+    // }
     memset((char *) &cli_addr, 0, sizeof(cli_addr));
     cli_addr.sin_family = AF_INET;
     cli_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -93,23 +95,60 @@ int main(int argc, char *argv[])
     readFile(filename, message);
     printf("%s\n", message.c_str());
     buffer = message.c_str();
+    printf("%s\n", buffer);
+    printf("%d\n", strlen(buffer));
 
-    char* rcvbuffer = new char[MAX_BUFFSIZE];
-    // for (int i=0;i < 5;i++){
+    char* rcvbuffer = new char[BUFFSIZE];
+    int success=0;
+    for (i=0; i < 1; i++) {
+        char* msg=(char*)malloc(1034);
+        char* ack=(char*)malloc(6);
+        
+        int n = 0;
+
+        msg[0] = 0x1;
+
+        msg[1] = (n >> 24) & 0xFF;
+        msg[2] = (n >> 16) & 0xFF;
+        msg[3] = (n >> 8) & 0xFF;
+        msg[4] = n & 0xFF;
+
+        int msglen = strlen(input);
+
+        msg[5] = (msglen >> 24) & 0xFF;
+        msg[6] = (msglen >> 16) & 0xFF;
+        msg[7] = (msglen >> 8) & 0xFF;
+        msg[8] = msglen & 0xFF;
+
+        msglen = (msg[5] << 24 | msg[6] << 16 | msg[7] << 8 | msg[8]);
+        printf("%d",msglen);
+
+        for (int i=0; i<msglen; i++){
+            msg[9+i] = buffer[i];
+        }
+
+        char checksum = 0;
+        for (i=0; i<msglen+9; i++){
+            checksum += msg[i];
+        }
+        checksum = ~checksum;
+
+        msg[msglen+9] = checksum;
+
         printf("Sending packet to %s port %d\n",ipaddr, port);
         // readFile(filename,buffer);
-        sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, slen);
-        if (sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, slen) == -1){
+        sprintf(msg, "%s %d",msg, i);
+        sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen);
+        if (sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen) == -1){
           cerr << "error sending packet";
           exit(1);
         }
 
-        recvlen = recvfrom(sockfd, rcvbuffer, MAX_BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
+        recvlen = recvfrom(sockfd, rcvbuffer, ACKSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
           if (recvlen >= 0) {
             rcvbuffer[recvlen] = 0;	/* expect a printable string - terminate it */
             printf("received message: \"%s\"\n", rcvbuffer);
         }
-	  // }
     // n = write(sockfd,buffer,strlen(buffer));
     // if (n < 0)
     //      error("ERROR writing to socket");
