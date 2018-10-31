@@ -53,12 +53,13 @@ int main(int argc, char *argv[])
     }
 
     int sockfd, n;
-    struct sockaddr_in serv_addr, cli_addr;
+    struct sockaddr_in serv_addr;  //server address
+    struct sockaddr_in cli_addr; // my address
 
     char* buffer;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd == -1)
         error("ERROR opening socket");
 
     int slen = sizeof(serv_addr);
@@ -84,13 +85,22 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    buffer = "hello";
+    // read file and casting the message to character
+    // string message;
+    // readFile(filename, message);
+    // printf("%s\n", message);
+    // buffer = &message[0];
+    buffer = "hello"
     printf("%s\n", buffer);
     printf("%d\n", strlen(buffer));
     // for (int i=0;i < 5;i++){
         printf("Sending packet to %s port %d\n",ipaddr, port);
         // readFile(filename,buffer);
         sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, slen);
+        if (sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&serv_addr, slen) == -1){
+          cerr << "error sending packet";
+          exit(1);
+        }
 
         recvlen = recvfrom(sockfd, buffer, BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
           if (recvlen >= 0) {

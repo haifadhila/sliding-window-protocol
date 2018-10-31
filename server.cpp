@@ -33,7 +33,7 @@ int writeFile(char* message, char* outputfile){
 int main(int argc, char *argv[])
 {
     unsigned int windowSize;
-    char buffer[BUFFSIZE];
+    char* buffer;
     int bufferSize;
     char* filename;
     unsigned int port;
@@ -56,17 +56,17 @@ int main(int argc, char *argv[])
      int n;
      int recvlen;
 
+     //set memory
+     memset((char*)&cli_addr,0,sizeof(cli_addr));
+     memset((char*)&server_addr,0,sizeof(server_addr));
+  	 server_addr.sin_family = AF_INET;
+  	 server_addr.sin_addr.s_addr = INADDR_ANY;
+  	 server_addr.sin_port = htons(port);
+
      // Create Socket
-     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
      if (sockfd < 0)
         error("ERROR opening socket");
-
-    memset((char*)&server_addr,0,sizeof(server_addr));
-
-    //bind socket
-	 server_addr.sin_family = AF_INET;
-	 server_addr.sin_addr.s_addr = INADDR_ANY;
-	 server_addr.sin_port = htons(port);
 
      if (bind(sockfd, (struct sockaddr *) &server_addr,
               sizeof(server_addr)) < 0)
@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     for (;;) {
 		    printf("waiting on port %d\n", port);
 		    recvlen = recvfrom(sockfd, buffer, BUFFSIZE, 0, (struct sockaddr *)&cli_addr, &clilen);
+        printf("%s\n", buffer);
 		    if (recvlen > 0) {
 			       buffer[recvlen] = 0;
 			       printf("received message: \"%s\" (%d bytes)\n", buffer, recvlen);
