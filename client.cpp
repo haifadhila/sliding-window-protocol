@@ -13,7 +13,9 @@
 #include <fstream>
 using namespace std;
 
-#define BUFFSIZE 1024
+#define MAX_BUFFSIZE 1024
+#define MAX_FRAME 1034
+
 void error(const char *msg)
 {
     perror(msg);
@@ -67,10 +69,7 @@ int main(int argc, char *argv[])
         error("ERROR opening socket");
 
     int slen = sizeof(serv_addr);
-    // if (server == NULL) {
-    //     cerr << "ERROR, no such host\n";
-    //     exit(0);
-    // }
+
     memset((char *) &cli_addr, 0, sizeof(cli_addr));
     cli_addr.sin_family = AF_INET;
     cli_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -94,10 +93,8 @@ int main(int argc, char *argv[])
     readFile(filename, message);
     printf("%s\n", message.c_str());
     buffer = message.c_str();
-    printf("%s\n", buffer);
-    printf("%d\n", strlen(buffer));
 
-    char* rcvbuffer = new char[BUFFSIZE];
+    char* rcvbuffer = new char[MAX_BUFFSIZE];
     // for (int i=0;i < 5;i++){
         printf("Sending packet to %s port %d\n",ipaddr, port);
         // readFile(filename,buffer);
@@ -107,7 +104,7 @@ int main(int argc, char *argv[])
           exit(1);
         }
 
-        recvlen = recvfrom(sockfd, rcvbuffer, BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
+        recvlen = recvfrom(sockfd, rcvbuffer, MAX_BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
           if (recvlen >= 0) {
             rcvbuffer[recvlen] = 0;	/* expect a printable string - terminate it */
             printf("received message: \"%s\"\n", rcvbuffer);
