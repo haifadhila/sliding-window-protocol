@@ -13,6 +13,7 @@
 #include <iostream>
 using namespace std;
 
+#define ACKSIZE 6
 #define BUFFSIZE 1024
 void error(const char *msg)
 {
@@ -73,14 +74,25 @@ int main(int argc, char *argv[])
               error("Bind error");
      clilen = sizeof(cli_addr);
 
+     int success=0;
     for (;;) {
+        char* msg=(char*)malloc(1034);
+        char* ack=(char*)malloc(6);
 		    printf("waiting on port %d\n", port);
-		    recvlen = recvfrom(sockfd, buffer, BUFFSIZE, 0, (struct sockaddr *)&cli_addr, &clilen);
+		    recvlen = recvfrom(sockfd, msg, BUFFSIZE, 0, (struct sockaddr *)&cli_addr, &clilen);
         printf("%s\n", buffer);
 		    if (recvlen > 0) {
-			       buffer[recvlen] = 0;
-			       printf("received message: \"%s\" (%d bytes)\n", buffer, recvlen);
-			       writeFile(buffer,filename);
+            int datalen = (msg[5] << 24 | msg[6] << 16 | msg[7] << 8 | msg[8]);
+			       char checksum = 0;
+              for (int i=0; i<datalen+10; i++){
+                checksum += msg[i];
+              }
+              if (checksum == 0xFFFFFFFF){
+                printf("Sent successfully\n");
+                success++;
+              }
+             printf("received message: \"%s\" (%d bytes)\n", msg, recvlen);
+			       writeFile(msg,filename);
 		    }else{
               printf("uh oh - something went wrong!\n");
         }
