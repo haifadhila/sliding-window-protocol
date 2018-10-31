@@ -20,10 +20,14 @@ void error(const char *msg)
     exit(0);
 }
 
-int readFile(string inputfile, string message){
+// Reading File eksternal
+int readFile(string inputfile, string &message){
     string line;
+    char charFile;
     ifstream filename;
-    filename.open("test.txt");
+
+    filename.open(inputfile);
+
     if (filename.is_open()){
         while(getline(filename, line)){
             message = message + line;
@@ -56,7 +60,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;  //server address
     struct sockaddr_in cli_addr; // my address
 
-    char* buffer;
+    const char* buffer;
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == -1)
@@ -85,14 +89,15 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // read file and casting the message to character
-    // string message;
-    // readFile(filename, message);
-    // printf("%s\n", message);
-    // buffer = &message[0];
-    buffer = "hello"
+    // read file and casting the message to buffer
+    string message;
+    readFile(filename, message);
+    printf("%s\n", message.c_str());
+    buffer = message.c_str();
     printf("%s\n", buffer);
     printf("%d\n", strlen(buffer));
+
+    char* rcvbuffer = new char[BUFFSIZE];
     // for (int i=0;i < 5;i++){
         printf("Sending packet to %s port %d\n",ipaddr, port);
         // readFile(filename,buffer);
@@ -102,10 +107,10 @@ int main(int argc, char *argv[])
           exit(1);
         }
 
-        recvlen = recvfrom(sockfd, buffer, BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
+        recvlen = recvfrom(sockfd, rcvbuffer, BUFFSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
           if (recvlen >= 0) {
-            buffer[recvlen] = 0;	/* expect a printable string - terminate it */
-            printf("received message: \"%s\"\n", buffer);
+            rcvbuffer[recvlen] = 0;	/* expect a printable string - terminate it */
+            printf("received message: \"%s\"\n", rcvbuffer);
         }
 	  // }
     // n = write(sockfd,buffer,strlen(buffer));
