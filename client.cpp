@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -107,8 +108,9 @@ int main(int argc, char *argv[])
     printf("%s\n", buffer);
 
     int size;
-    size = getFileSize(filename) / 1024;
-    cout << "size file = " << size << endl;
+    float x;
+    x = getFileSize(filename)/(float)1024;
+    size = ceil(x);
     // msg is frame with SOH, Sequence Number, Data Length, Data, and checksum
     for (int i=0; i < size; i++) {
         char* msg=(char*)malloc(MAX_FRAME);
