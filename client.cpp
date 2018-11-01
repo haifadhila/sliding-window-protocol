@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
     char* rcvbuffer = new char[BUFFSIZE];
     int success=0;
-    for (i=0; i < 1; i++) {
+    for (int i=0; i < 1; i++) {
         char* msg=(char*)malloc(1034);
         char* ack=(char*)malloc(6);
         
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         msg[3] = (n >> 8) & 0xFF;
         msg[4] = n & 0xFF;
 
-        int msglen = strlen(input);
+        int msglen = strlen(buffer);
 
         msg[5] = (msglen >> 24) & 0xFF;
         msg[6] = (msglen >> 16) & 0xFF;
@@ -149,13 +149,7 @@ int main(int argc, char *argv[])
             rcvbuffer[recvlen] = 0;	/* expect a printable string - terminate it */
             printf("received message: \"%s\"\n", rcvbuffer);
         }
-    // n = write(sockfd,buffer,strlen(buffer));
-    // if (n < 0)
-    //      error("ERROR writing to socket");
-    //
-    // if (n < 0)
-    //      error("ERROR reading from socket");
-    // printf("%s\n",buffer);
+    }
     close(sockfd);
     return 0;
 }
