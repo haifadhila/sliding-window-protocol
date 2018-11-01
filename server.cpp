@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
                 };
               } else {
                 printf("checksum failed\n");
-                ack_packet.ack = 0x15;
+                ack_packet.ack = 0x21;
                 ack_packet.Next_SeqNum = (recvbuffer[1] << 24) | (recvbuffer[2] << 16) | (recvbuffer[3] << 8) | (recvbuffer[4]);
                 ack_packet.checksum = checksum;
 
