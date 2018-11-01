@@ -14,6 +14,7 @@
 using namespace std;
 
 #define BUFFSIZE 1024
+#define MAX_FRAME 1034
 #define ACKSIZE 6
 void error(const char *msg)
 {
@@ -36,6 +37,15 @@ int readFile(string inputfile, string &message){
     }else{
         cout << "Can't open file" << endl;
     }
+}
+
+unsigned long getFileSize(string filename){
+  FILE *p_file = NULL;
+  p_file = fopen(filename.c_str(),"rb");
+  fseek(p_file,0,SEEK_END);
+  int size = ftell(p_file);
+  fclose(p_file);
+  return size;
 }
 
 int main(int argc, char *argv[])
@@ -63,15 +73,13 @@ int main(int argc, char *argv[])
 
     const char* buffer;
 
+    // Create Socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == -1)
         error("ERROR opening socket");
 
     int slen = sizeof(serv_addr);
-    // if (server == NULL) {
-    //     cerr << "ERROR, no such host\n";
-    //     exit(0);
-    // }
+
     memset((char *) &cli_addr, 0, sizeof(cli_addr));
     cli_addr.sin_family = AF_INET;
     cli_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -91,15 +99,19 @@ int main(int argc, char *argv[])
     }
 
     // read file and casting the message to buffer
+
     string message;
     readFile(filename, message);
     printf("%s\n", message.c_str());
     buffer = message.c_str();
     printf("%s\n", buffer);
-    printf("%d\n", strlen(buffer));
 
-    for (int i=0; i < 1; i++) {
-        char* msg=(char*)malloc(1034);
+    int size;
+    size = getFileSize(filename) / 1024;
+    cout << "size file = " << size << endl;
+    // msg is frame with SOH, Sequence Number, Data Length, Data, and checksum
+    for (int i=0; i < size; i++) {
+        char* msg=(char*)malloc(MAX_FRAME);
         int n = 0;
         msg[0] = 0x1;
         msg[1] = (n >> 24) & 0xFF;
@@ -130,10 +142,31 @@ int main(int argc, char *argv[])
         msg[msglen+9] = checksum;
 
         printf("Sending packet to %s port %d\n",ipaddr, port);
-        // // readFile(filename,buffer);
-        // sprintf(msg, "%s %d",msg, i);
-        // sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen);
-        if (sendto(sockfd, msg, 1034, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+
+        // int lar = 0;
+        // int lfs = 0;
+        // int j = 0;
+        // int totalpacket = 0;
+        // while((lfs - lar) <= windowSize){
+        //   if (strlen(msg) == MAX_FRAME){
+        //     totalpacket++;
+        //   }
+        //   if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+        //     std::cerr << "Error sending packet" << '\n';
+        //     exit(1);
+        //   }
+        //   lfs++;
+        // }
+        //
+        //   char* ack = (char*)malloc(6);
+        //   recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
+        //   if (recvlen >= 0) {
+        //     ack[recvlen] = 0;	/* expect a printable string - terminate it */
+        //     printf("received message: \"%s\"\n", ack);
+        //     lar++;
+        //   }
+        // }
+        if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
           cerr << "error sending packet";
           exit(1);
         }
