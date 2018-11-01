@@ -29,16 +29,6 @@ void error(const char *msg)
     exit(1);
 }
 
-int writeFile(char* message, char* outputfile){
-    ofstream filename;
-    filename.open(outputfile, ofstream::binary);
-
-    int size = sizeof(message);
-    filename.write(message,size);
-    filename.close();
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     unsigned int windowSize;
@@ -74,82 +64,89 @@ int main(int argc, char *argv[])
 
      // Create Socket
      sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-     if (sockfd < 0)
-        error("ERROR opening socket");
+     if (sockfd < 0){
+       error("ERROR opening socket");
+     }
 
-     if (bind(sockfd, (struct sockaddr *) &server_addr,
-              sizeof(server_addr)) < 0)
-              error("Bind error");
+     if (bind(sockfd, (struct sockaddr *) &server_addr,sizeof(server_addr)) < 0){
+       error("Bind error");
+     }
+
      clilen = sizeof(cli_addr);
 
     char* ack_send=(char*)malloc(6);
     char* recvbuffer = (char*)malloc(MAX_FRAME);
+    char* content = (char*)malloc(BUFFSIZE);
+
+    ofstream fstream;
+    fstream.open(filename);
     for (;;) {
+        int frame = 0;
 		    printf("waiting on port %d\n", port);
-		    recvlen= recvfrom(sockfd, recvbuffer, MAX_FRAME, 0, (struct sockaddr *)&cli_addr, &clilen);
+		    recvlen = recvfrom(sockfd, recvbuffer, MAX_FRAME, 0, (struct sockaddr *)&cli_addr, &clilen);
 
 		    if (recvlen > 0) {
             int datalen = (recvbuffer[5] << 24) | (recvbuffer[6] << 16) | (recvbuffer[7] << 8) | recvbuffer[8];
+            cout << "data length = " << datalen << endl;
 			      char checksum = 0;
-              for (int i=0; i<datalen+10; i++){
-                checksum += recvbuffer[i];
-              }
-              if (checksum == 0xFFFFFFFF){
-                printf("Sent successfully\n");
-                ack_packet.ack = 0x06;
-                ack_packet.Next_SeqNum = ((recvbuffer[1] << 24) | (recvbuffer[2] << 16) | (recvbuffer[3] << 8) | (recvbuffer[4])) + 1;
-                ack_packet.checksum = checksum;
+            for (int i=0; i<datalen+10; i++){
+              checksum += recvbuffer[i];
+            }
+            if (checksum == 0xFFFFFFFF){
+              printf("Sent successfully\n");
+              ack_packet.ack = 0x06;
+              ack_packet.Next_SeqNum = ((recvbuffer[1] << 24) | (recvbuffer[2] << 16) | (recvbuffer[3] << 8) | (recvbuffer[4])) + 1;
+              ack_packet.checksum = checksum;
 
-                //generate ack to send
-                ack_send[0] = ack_packet.ack;
-                ack_send[1] = (ack_packet.Next_SeqNum >> 24) && 0xFF;
-                ack_send[2] = (ack_packet.Next_SeqNum >> 16) && 0xFF;
-                ack_send[3] = (ack_packet.Next_SeqNum >> 8) && 0xFF;
-                ack_send[4] = (ack_packet.Next_SeqNum) && 0xFF;
-                ack_send[5] = ack_packet.checksum;
-                printf("%x\n", ack_send[0]);
-                sprintf(ack_send,"ACK");
-                std::cout << "sending response" << '\n';
-                if (sendto(sockfd,ack_send, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0){
-                  cerr << "Error sending ACK" << '\n';
-                };
-              } else {
-                printf("checksum failed\n");
-                ack_packet.ack = 0x15;
-                ack_packet.Next_SeqNum = (recvbuffer[1] << 24) | (recvbuffer[2] << 16) | (recvbuffer[3] << 8) | (recvbuffer[4]);
-                ack_packet.checksum = checksum;
+              //generate ack to send
+              ack_send[0] = ack_packet.ack;
+              ack_send[1] = (ack_packet.Next_SeqNum >> 24) && 0xFF;
+              ack_send[2] = (ack_packet.Next_SeqNum >> 16) && 0xFF;
+              ack_send[3] = (ack_packet.Next_SeqNum >> 8) && 0xFF;
+              ack_send[4] = (ack_packet.Next_SeqNum) && 0xFF;
+              ack_send[5] = ack_packet.checksum;
+              printf("THIS IS ACK %x\n", ack_send[0]);
+              sprintf(ack_send,"ACK");
+              std::cout << "sending response" << '\n';
+              if (sendto(sockfd,ack_send, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0){
+                cerr << "Error sending ACK" << '\n';
+              };
+            } else {
+              printf("checksum failed\n");
+              ack_packet.ack = 0x15;
+              ack_packet.Next_SeqNum = (recvbuffer[1] << 24) | (recvbuffer[2] << 16) | (recvbuffer[3] << 8) | (recvbuffer[4]);
+              ack_packet.checksum = checksum;
 
-                //generate ack to send
-                ack_send[0] = ack_packet.ack;
-                ack_send[1] = (ack_packet.Next_SeqNum >> 24) && 0xFF;
-                ack_send[2] = (ack_packet.Next_SeqNum >> 16) && 0xFF;
-                ack_send[3] = (ack_packet.Next_SeqNum >> 8) && 0xFF;
-                ack_send[4] = (ack_packet.Next_SeqNum) && 0xFF;
-                ack_send[5] = ack_packet.checksum;
-                sprintf(ack_send,"NACK");
-                std::cout << "sending response" << '\n';
-                if (sendto(sockfd,ack_send, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0){
-                  cerr << "Error sending NACK" << '\n';
-                };
-              }
+              //generate ack to send
+              ack_send[0] = ack_packet.ack;
+              ack_send[1] = (ack_packet.Next_SeqNum >> 24) && 0xFF;
+              ack_send[2] = (ack_packet.Next_SeqNum >> 16) && 0xFF;
+              ack_send[3] = (ack_packet.Next_SeqNum >> 8) && 0xFF;
+              ack_send[4] = (ack_packet.Next_SeqNum) && 0xFF;
+              ack_send[5] = ack_packet.checksum;
+              sprintf(ack_send,"NACK");
+              std::cout << "sending response" << '\n';
+              if (sendto(sockfd,ack_send, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0){
+                cerr << "Error sending NACK" << '\n';
+              };
+            }
+
             printf("message: \n");
             for (int i=0; i< datalen; i++) {
                 printf("%c",recvbuffer[9+i]);
+                content[(frame*1024) + i] = recvbuffer[9+i];
             }
             printf("\n");
-			      writeFile(recvbuffer,filename);
 		    }else{
             printf("uh oh - something went wrong!\n");
         }
-
-      // // char* ack=(char*)malloc(6);
-  		// // sprintf(ack, "ACK");
-  		// printf("sending response \"%s\"\n", ack_send);
-  		// if (sendto(sockfd, ack_send, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0)
-  		// 	perror("sendto");
-	}
+        frame++;
+        printf("Content File : %s\n", content);
+        fstream << content;
+      }
 
      printf("Here is the message: %s\n",buffer);
+     fstream.close();
      close(sockfd);
      return 0;
 }
