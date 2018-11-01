@@ -74,32 +74,38 @@ int main(int argc, char *argv[])
               error("Bind error");
      clilen = sizeof(cli_addr);
 
-     int success=0;
+    char* recvbuffer = (char*)malloc(1034);
     for (;;) {
-        char* msg=(char*)malloc(1034);
-        char* ack=(char*)malloc(6);
-		    printf("waiting on port %d\n", port);
-		    recvlen = recvfrom(sockfd, msg, BUFFSIZE, 0, (struct sockaddr *)&cli_addr, &clilen);
-        printf("%s\n", buffer);
+		    printf("test waiting on port %d\n", port);
+		    recvlen= recvfrom(sockfd, recvbuffer, 1034, 0, (struct sockaddr *)&cli_addr, &clilen);
+       
 		    if (recvlen > 0) {
-            int datalen = (msg[5] << 24 | msg[6] << 16 | msg[7] << 8 | msg[8]);
+            printf("recvlen>0\n");
+            int datalen = (recvbuffer[5] << 24) | (recvbuffer[6] << 16) | (recvbuffer[7] << 8) | recvbuffer[8];
 			       char checksum = 0;
               for (int i=0; i<datalen+10; i++){
-                checksum += msg[i];
+                checksum += recvbuffer[i];
               }
               if (checksum == 0xFFFFFFFF){
+                printf("0xFFFFFFFF");
                 printf("Sent successfully\n");
-                success++;
+              } else {
+                printf("checksum failed\n");
               }
-             printf("received message: \"%s\" (%d bytes)\n", msg, recvlen);
-			       writeFile(msg,filename);
+              printf("message: \n");
+             for (int i=0; i< datalen; i++) {
+                  printf("%c",recvbuffer[9+i]);
+              }
+              printf("\n");
+			       writeFile(recvbuffer,filename);
 		    }else{
               printf("uh oh - something went wrong!\n");
         }
 
-  		sprintf(buffer, "ack %d", msgcnt++);
-  		printf("sending response \"%s\"\n", buffer);
-  		if (sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&cli_addr, clilen) < 0)
+      char* ack=(char*)malloc(6);
+  		sprintf(ack, "ACK");
+  		printf("sending response \"%s\"\n", ack);
+  		if (sendto(sockfd, ack, 6, 0, (struct sockaddr *)&cli_addr, clilen) < 0)
   			perror("sendto");
 	}
 

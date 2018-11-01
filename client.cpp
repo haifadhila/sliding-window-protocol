@@ -98,37 +98,31 @@ int main(int argc, char *argv[])
     printf("%s\n", buffer);
     printf("%d\n", strlen(buffer));
 
-    char* rcvbuffer = new char[BUFFSIZE];
-    int success=0;
     for (int i=0; i < 1; i++) {
         char* msg=(char*)malloc(1034);
-        char* ack=(char*)malloc(6);
-        
         int n = 0;
-
         msg[0] = 0x1;
-
         msg[1] = (n >> 24) & 0xFF;
         msg[2] = (n >> 16) & 0xFF;
         msg[3] = (n >> 8) & 0xFF;
         msg[4] = n & 0xFF;
-
         int msglen = strlen(buffer);
-
+        printf("msglen= %d\n", msglen);
         msg[5] = (msglen >> 24) & 0xFF;
         msg[6] = (msglen >> 16) & 0xFF;
         msg[7] = (msglen >> 8) & 0xFF;
         msg[8] = msglen & 0xFF;
 
-        msglen = (msg[5] << 24 | msg[6] << 16 | msg[7] << 8 | msg[8]);
-        printf("%d",msglen);
-
         for (int i=0; i<msglen; i++){
             msg[9+i] = buffer[i];
         }
 
+        for (int i=0; i<msglen; i++) {
+            printf("%c", msg[9+i]);
+        }
+
         char checksum = 0;
-        for (i=0; i<msglen+9; i++){
+        for (int i=0; i<msglen+9; i++){
             checksum += msg[i];
         }
         checksum = ~checksum;
@@ -136,18 +130,19 @@ int main(int argc, char *argv[])
         msg[msglen+9] = checksum;
 
         printf("Sending packet to %s port %d\n",ipaddr, port);
-        // readFile(filename,buffer);
-        sprintf(msg, "%s %d",msg, i);
-        sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen);
-        if (sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen) == -1){
+        // // readFile(filename,buffer);
+        // sprintf(msg, "%s %d",msg, i);
+        // sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&serv_addr, slen);
+        if (sendto(sockfd, msg, 1034, 0, (struct sockaddr *)&serv_addr, slen) == -1){
           cerr << "error sending packet";
           exit(1);
         }
 
-        recvlen = recvfrom(sockfd, rcvbuffer, ACKSIZE, 0, (struct sockaddr *)&serv_addr, &slen);
+        char* ack = (char*)malloc(6);
+        recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
           if (recvlen >= 0) {
-            rcvbuffer[recvlen] = 0;	/* expect a printable string - terminate it */
-            printf("received message: \"%s\"\n", rcvbuffer);
+            ack[recvlen] = 0;	/* expect a printable string - terminate it */
+            printf("received message: \"%s\"\n", ack);
         }
     }
     close(sockfd);
