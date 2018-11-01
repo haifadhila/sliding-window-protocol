@@ -49,6 +49,19 @@ unsigned long getFileSize(string filename){
   return size;
 }
 
+char checksumVal(int msglen, char* msg){
+  char checksum = 0;
+  for (int i=0; i<msglen+9; i++){
+      checksum += msg[i];
+  }
+  checksum = ~checksum;
+
+  msg[msglen+9] = checksum;
+
+  return checksum;
+}
+
+
 int main(int argc, char *argv[])
 {
     char* filename;
@@ -111,37 +124,44 @@ int main(int argc, char *argv[])
     float x;
     x = getFileSize(filename)/(float)1024;
     total_frame = ceil(x);
+    printf("TOTAL FRAME: %d\n\n",total_frame);
     // msg is frame with SOH, Sequence Number, Data Length, Data, and checksum
     for (int i=0; i < total_frame; i++) {
         char* msg=(char*)malloc(MAX_FRAME);
-        int n = 0;
+        int seqnum = i;
         msg[0] = 0x1;
-        msg[1] = (n >> 24) & 0xFF;
-        msg[2] = (n >> 16) & 0xFF;
-        msg[3] = (n >> 8) & 0xFF;
-        msg[4] = n & 0xFF;
-        int msglen = strlen(buffer);
-        printf("msglen= %d\n", msglen);
-        msg[5] = (msglen >> 24) & 0xFF;
-        msg[6] = (msglen >> 16) & 0xFF;
-        msg[7] = (msglen >> 8) & 0xFF;
-        msg[8] = msglen & 0xFF;
+        msg[1] = (seqnum >> 24) & 0xFF;
+        msg[2] = (seqnum >> 16) & 0xFF;
+        msg[3] = (seqnum >> 8) & 0xFF;
+        msg[4] = seqnum & 0xFF;
 
-        for (int i=0; i<msglen; i++){
-            msg[9+i] = buffer[i];
+        int msglen = strlen(buffer);
+        int data_length;
+        if (msglen>1024)
+          data_length = 1024;
+        else
+          data_length = msglen;
+
+        printf("msglen= %d\n", msglen);
+        printf("data length = %d\n", data_length);
+
+        msg[5] = (data_length >> 24) & 0xFF;
+        msg[6] = (data_length >> 16) & 0xFF;
+        msg[7] = (data_length >> 8) & 0xFF;
+        msg[8] = data_length & 0xFF;
+
+        for (int i=0; i<data_length; i++){
+            msg[9+i] = buffer[seqnum*1024+i];
         }
 
-        for (int i=0; i<msglen; i++) {
+        for (int i=0; i<data_length; i++) {
             printf("%c", msg[9+i]);
         }
 
-        char checksum = 0;
-        for (int i=0; i<msglen+9; i++){
-            checksum += msg[i];
-        }
-        checksum = ~checksum;
+        printf("\nFRAME KE-%d\n",seqnum+1);
+        printf("PINDAH FRAME\n\n");
 
-        msg[msglen+9] = checksum;
+        char checksum = checksumVal(data_length,msg);
 
         printf("Sending packet to %s port %d\n",ipaddr, port);
 
