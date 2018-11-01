@@ -107,12 +107,12 @@ int main(int argc, char *argv[])
     buffer = message.c_str();
     printf("%s\n", buffer);
 
-    int size;
+    int total_frame;
     float x;
     x = getFileSize(filename)/(float)1024;
-    size = ceil(x);
+    total_frame = ceil(x);
     // msg is frame with SOH, Sequence Number, Data Length, Data, and checksum
-    for (int i=0; i < size; i++) {
+    for (int i=0; i < total_frame; i++) {
         char* msg=(char*)malloc(MAX_FRAME);
         int n = 0;
         msg[0] = 0x1;
