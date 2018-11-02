@@ -62,11 +62,11 @@ Berikut cara kerja program:
 ### Pembagian Tugas
 
 1. Yuly Haruka Berliana Gunawan / 13516031
-		- Write File
-		- Send & Receive Frame
+    - Write File
+    - Send & Receive Frame
     - Unserialize Frames to Data
-		- Sliding Window Protocol in Receiver
-		- Generate and Send ACK
+    - Sliding Window Protocol in Receiver
+    - Generate and Send ACK
     - Generate and Send NAK
 
 2. Haifa Fadhila Ilma / 13516076
