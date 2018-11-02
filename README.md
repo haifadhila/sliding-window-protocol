@@ -11,7 +11,6 @@ Anggota:
 ### Petunjuk Penggunaan Program
 Pertama, lakukan *Makefile*
 ```
-
 ```
 Cara menjalankan program setelah di-*Makefile*:
 1.	Pertama, jalankan Receiver, eksekusi pada command prompt/ terminal:
@@ -36,9 +35,9 @@ Cara menjalankan program setelah di-*Makefile*:
 
 
 ### Cara Kerja Program
-Sliding Window Protocol merupakan salah satu metode
+Sliding Window Protocol merupakan salah satu metode pengiriman file yang dipartisi menjadi *packets/frames*. Metode ini mendukung pengiriman lebih dari satu packet dalam satu waktu.
 
-Sliding Window Protocol dengan Selective Repeat Automatic Repeat Request.
+Program yang kami buat merupakan implementasi dari cara kerja Sliding Window Protocol dengan Selective Repeat Automatic Repeat Request.
 
 ### Pembagian Tugas
 
