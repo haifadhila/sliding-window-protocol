@@ -63,7 +63,7 @@ Berikut cara kerja program:
 
 1. Yuly Haruka Berliana Gunawan / 13516031
     - Write File
-    - Send & Receive Frame
+    - Send & Receive Frame in Receiver
     - Unserialize Frames to Data
     - Sliding Window Protocol in Receiver
     - Generate and Send ACK
@@ -72,7 +72,7 @@ Berikut cara kerja program:
 2. Haifa Fadhila Ilma / 13516076
     - Serialize Buffer Data into Frame Format
     - Checksum Data in Sender & Received Buffer
-    - Send & Receive Frame
+    - Send & Receive Frame in Sender
     - Sliding Window Protocol in Sender
 
 2. Nadija Herdwina Putri Soerojo / 13516130
