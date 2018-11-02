@@ -11,7 +11,7 @@ Anggota:
 ### Petunjuk Penggunaan Program
 Pertama, lakukan *Makefile*
 ```
-./sendfile <filename> <windowsize> <buffersize <destination_ip> <destination_port> "
+
 ```
 Cara menjalankan program setelah di-*Makefile*:
 1.	Pertama, jalankan Receiver, eksekusi pada command prompt/ terminal:
