@@ -77,7 +77,7 @@ void acklistener() {
         int ack_size = recvfrom(sockfd, (char *)ack, ACKSIZE, MSG_WAITALL, (struct sockaddr *) &serv_addr, &serv_addr_size);
 
         bool ack_negative;
-        if (ack[0] == 0x15) 
+        if (ack[0] == 0x15)
             ack_negative=true;
         else ack_negative=false;
 
@@ -86,7 +86,7 @@ void acklistener() {
         int ack_sequence_number = ntohl(temp_sequence_number);
 
         bool ack_error = (ack[5] != checksumAck(ack, ACKSIZE - (int) 1));
-        
+
         window_info_mutex.lock();
         bool inside_window = !ack_error && ack_sequence_number > lar && ack_sequence_number <=lfs;
         if (inside_window) {
@@ -144,14 +144,14 @@ int intoFrame(char msg[], int seqnum, const char* buffer, int data_length){
 
       printf("data length = %d\n", data_length);
 
-      msg[5] = (data_length) >> 24) & 0xFF;
-      msg[6] = (int(data_length) >> 16) & 0xFF;
-      msg[7] = (int(data_length) >> 8) & 0xFF;
-      msg[8] = int(data_length) & 0xFF;
+      msg[5] = (data_length >> 24) & 0xFF;
+      msg[6] = (data_length >> 16) & 0xFF;
+      msg[7] = (data_length >> 8) & 0xFF;
+      msg[8] = (data_length) & 0xFF;
 
       cout << "DL:" << ((msg[5] << 24) | (msg[6] << 16) | (msg[7] << 8) | (msg[8]));
 
-      for (int i=0; i<data_length; i++){    
+      for (int i=0; i<data_length; i++){
           msg[9+i] = buffer[seqnum*1024+i];
       }
 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
         } else {
             cout << "all file read stopped" << endl;
         }
-      
+
         window_info_mutex.lock();
         // Sliding Window
         window_send_data_time = new time_stamp[windowSize];
@@ -307,9 +307,9 @@ int main(int argc, char *argv[]) {
                     window_info_mutex.lock();
                     cout << "sequence_number < frame_number" << endl;
                     bool havent_send = !window_send_data_check[i];
-                    
+
                     bool timeout_without_ack = !window_ack_recv[i] && (time_diff(time_now(), window_send_data_time[i]) > TIMEOUT);
-                    
+
                     if (havent_send || timeout_without_ack) {
                         cout << "haven't send data or timeout without receiving ack" << endl;
 
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
                         break;
                     }
                     window_info_mutex.unlock();
-                } else { 
+                } else {
                     break;
                 }
             }
