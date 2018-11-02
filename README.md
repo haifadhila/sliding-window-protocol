@@ -70,14 +70,14 @@ Berikut cara kerja program:
     - Generate and Send NAK
 
 2. Haifa Fadhila Ilma / 13516076
-		- Serialize Buffer Data into Frame Format
-		- Checksum Data in Sender & Received Buffer
-		- Send & Receive Frame
-	    - Sliding Window Protocol in Sender
+    - Serialize Buffer Data into Frame Format
+    - Checksum Data in Sender & Received Buffer
+    - Send & Receive Frame
+    - Sliding Window Protocol in Sender
 
 2. Nadija Herdwina Putri Soerojo / 13516130
-	    - Read File
-		- Sliding Window Protocol in Sender
-	    - Checksum ACK in Sender
-		- Add multithreading in Sending Frame and Receiving ACK
-		- Send-frame Validation (if it's must be sent/not)
+    - Read File
+    - Sliding Window Protocol in Sender
+    - Checksum ACK in Sender
+    - Add multithreading in Sending Frame and Receiving ACK
+    - Send-frame Validation (if it's must be sent/not)
