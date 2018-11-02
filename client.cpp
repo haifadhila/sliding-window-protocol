@@ -105,7 +105,6 @@ void acklistener() {
     }
 }
 // Reading File eksternal per buffer
-
 bool readFile(FILE *f, int *real_buff_size, char* buffer) {
     //return read done or not
     char charFile;
@@ -144,7 +143,7 @@ int intoFrame(char msg[], int seqnum, const char* buffer, int data_length){
 
       printf("data length = %d\n", data_length);
 
-      msg[5] = (data_length) >> 24) & 0xFF;
+      msg[5] = (data_length >> 24) & 0xFF;
       msg[6] = (int(data_length) >> 16) & 0xFF;
       msg[7] = (int(data_length) >> 8) & 0xFF;
       msg[8] = int(data_length) & 0xFF;
@@ -241,12 +240,12 @@ int main(int argc, char *argv[]) {
         window_send_data_check = new bool[windowSize];
         int sequence_number;
         int add_frame;
-        if (bufferSize % MAX_DATA == 0) {
+        if (real_buff_size % MAX_DATA == 0) {
             add_frame=0;
         } else {
             add_frame=1;
         }
-        int frame_number= bufferSize/MAX_DATA + add_frame;
+        int frame_number= real_buff_size/MAX_DATA + add_frame;
 
         //initialize: all frame in window haven't been sent
         cout << "initializing sliding window protocol. . . " << endl;
@@ -255,8 +254,6 @@ int main(int argc, char *argv[]) {
             window_send_data_check[i] = false;
         }
 
-        lar = -1;
-        lfs = lar+windowSize;
 
         window_info_mutex.unlock();
 
