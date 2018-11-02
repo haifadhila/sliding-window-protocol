@@ -116,7 +116,6 @@ int main(int argc, char *argv[])
 
     string message;
     readFile(filename, message);
-    printf("%s\n", message.c_str());
     buffer = message.c_str();
     printf("%s\n", buffer);
 
@@ -125,6 +124,7 @@ int main(int argc, char *argv[])
     x = getFileSize(filename)/(float)1024;
     total_frame = ceil(x);
     printf("TOTAL FRAME: %d\n\n",total_frame);
+
     // msg is frame with SOH, Sequence Number, Data Length, Data, and checksum
     for (int i=0; i < total_frame; i++) {
         char* msg=(char*)malloc(MAX_FRAME);
@@ -165,29 +165,37 @@ int main(int argc, char *argv[])
 
         printf("Sending packet to %s port %d\n",ipaddr, port);
 
-        // int lar = 0;
-        // int lfs = 0;
-        // int j = 0;
-        // int totalpacket = 0;
-        // while((lfs - lar) <= windowSize){
-        //   if (strlen(msg) == MAX_FRAME){
-        //     totalpacket++;
-        //   }
-        //   if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
-        //     std::cerr << "Error sending packet" << '\n';
-        //     exit(1);
-        //   }
-        //   lfs++;
-        // }
-        //
-        //   char* ack = (char*)malloc(6);
-        //   recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
-        //   if (recvlen >= 0) {
-        //     ack[recvlen] = 0;	/* expect a printable string - terminate it */
-        //     printf("received message: \"%s\"\n", ack);
-        //     lar++;
-        //   }
-        // }
+        // Sliding Window
+        int lar = 0;
+        int lfs = lar + windowSize;
+        int j = 0;
+        int buff_i = 0;
+        while(buff_i < bufferSize){
+          if (send_frame < lfs){
+            //send the frame
+            if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+              std::cerr << "Error sending packet" << '\n';
+              exit(1);
+            }
+            send_frame++;
+          }else /*terima ack*/{
+            char* ack = (char*)malloc(6);
+            recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
+            if (ack[0] == 0x06) {
+              ack[recvlen] = 0;	/* expect a printable string - terminate it */
+              printf("received message: \"%s\"\n", ack);
+              lar++;
+            }else{
+              //nerima nack
+              if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+                std::cerr << "Error sending packet" << '\n';
+                exit(1);
+              }
+            }
+          }
+
+        }
+
         if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
           cerr << "error sending packet";
           exit(1);
