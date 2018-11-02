@@ -11,25 +11,26 @@ Anggota:
 ### Petunjuk Penggunaan Program
 Pertama, lakukan *Makefile*
 ```
+$ make
 ```
 Cara menjalankan program setelah di-*Makefile*:
 1.	Pertama, jalankan Receiver, eksekusi pada command prompt/ terminal:
 	```
-	./recvfile <filename> <windowsize> <buffersize> <port>
+	$ ./recvfile <filename> <windowsize> <buffersize> <port>
 	```
 	Contoh:
 	```
-	./recvfile "hello.txt" 10 1000 2334
+	$ ./recvfile "hello.txt" 10 1000 2334
 	```
 	Contoh di atas akan menjalankan program untuk menerima file dengan *hello.txt* sebagai file yang diterima, ukuran window sebesar 10 untuk Sliding Window Protocol, ukuran buffer 1000 (dapat memuat 1000 frame) dan port 2334.
 
 2. Kedua, jalankan Sender, eksekusi pada command prompt/ terminal:
 	```
-	./sendfile <filename> <windowsize> <buffersize> <destination_ip> <destination_port> "
+	$ ./sendfile <filename> <windowsize> <buffersize> <destination_ip> <destination_port> "
 	```
 	Contoh:
 	```
-	./sendfile "test.txt" 10 1000 127.0.0.1 2334
+	$ ./sendfile "test.txt" 10 1000 127.0.0.1 2334
 	```
 	Contoh di atas akan menjalankan program untuk mengirim file dengan *test.txt* sebagai file yang akan dikirim, ukuran window sebesar 10 untuk Sliding Window Protocol, ukuran buffer 1000 (dapat memuat 1000 frame), IP Address 127.0.0.1 dan port 2334.
 
