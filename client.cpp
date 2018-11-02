@@ -22,21 +22,42 @@ void error(const char *msg)
     perror(msg);
     exit(0);
 }
+//reading file eksternal All
+int readFileAll(string inputfile, string &message){
+  string line;
+  ifstream fstream;
+  fstream.open(inputfile);
 
-// Reading File eksternal
-int readFile(string inputfile, string &message){
-    string line;
+  if (fstream.is_open()){
+    while (getline(fstream,line)){
+      message = message + line;
+    }
+  }else{
+    cout << "Can't open file";
+  }
+  return 0;
+}
+
+// Reading File eksternal per buffer
+char* readFile(string inputfile, int bufferSize){
+    char* message;
     char charFile;
     ifstream filename;
+    int max_read_file , i;
 
+    max_read_file = bufferSize * MAX_FRAME;
+    message = (char*)malloc(max_read_file);
+    i = 0;
     filename.open(inputfile);
-
     if (filename.is_open()){
-        while(getline(filename, line)){
-            message = message + line;
-        }
+      while (!filename.eof() && (i < max_read_file)){
+          filename.get(charFile);
+          message[i] = charFile;
+          i++;
+      }
+      return message;
     }else{
-        cout << "Can't open file" << endl;
+      cout << "Can't read the file";
     }
 }
 
@@ -85,8 +106,6 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;  //server address
     struct sockaddr_in cli_addr; // my address
 
-    const char* buffer;
-
     // Create Socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == -1)
@@ -113,9 +132,11 @@ int main(int argc, char *argv[])
     }
 
     // read file and casting the message to buffer
-
+    const char* buffer;
     string message;
-    readFile(filename, message);
+    // char* message = (char*)malloc(bufferSize*BUFFSIZE);
+    // strcpy(message,readFile(filename, bufferSize));
+    readFileAll(filename,message);
     buffer = message.c_str();
     printf("%s\n", buffer);
 
@@ -170,6 +191,7 @@ int main(int argc, char *argv[])
         int lfs = lar + windowSize;
         int j = 0;
         int buff_i = 0;
+        int send_frame = 0;
         while(buff_i < bufferSize){
           if (send_frame < lfs){
             //send the frame
@@ -178,35 +200,34 @@ int main(int argc, char *argv[])
               exit(1);
             }
             send_frame++;
-          }else /*terima ack*/{
-            char* ack = (char*)malloc(6);
-            recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
-            if (ack[0] == 0x06) {
-              ack[recvlen] = 0;	/* expect a printable string - terminate it */
-              printf("received message: \"%s\"\n", ack);
-              lar++;
-            }else{
-              //nerima nack
-              if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
-                std::cerr << "Error sending packet" << '\n';
-                exit(1);
-              }
-            }
+            buff_i++;
           }
-
-        }
-
-        if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
-          cerr << "error sending packet";
-          exit(1);
-        }
-
-        char* ack = (char*)malloc(6);
-        recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
-          if (recvlen >= 0) {
+          char* ack = (char*)malloc(6);
+          recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
+          if (ack[0] == 0x06) {
             ack[recvlen] = 0;	/* expect a printable string - terminate it */
-            printf("received message: \"%s\"\n", ack);
+            cout << "disini ack" << endl;
+            printf("received message: \"%x\"\n", ack);
+            lar++;
+          }else{
+            //nerima nak
+            if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+              std::cerr << "Error sending packet" << '\n';
+              exit(1);
+              }
+          }
         }
+        // if (sendto(sockfd, msg, MAX_FRAME, 0, (struct sockaddr *)&serv_addr, slen) == -1){
+        //   cerr << "error sending packet";
+        //   exit(1);
+        // }
+        //
+        // char* ack = (char*)malloc(6);
+        // recvlen = recvfrom(sockfd, ack, 6, 0, (struct sockaddr *)&serv_addr, &slen);
+        //   if (recvlen >= 0) {
+        //     ack[recvlen] = 0;	/* expect a printable string - terminate it */
+        //     printf("received message: \"%s\"\n", ack);
+        // }
     }
     close(sockfd);
     return 0;
